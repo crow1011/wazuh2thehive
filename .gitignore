@@ -1,0 +1,4 @@
+logs/*
+logs
+*.alert
+test.py
