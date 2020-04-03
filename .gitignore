@@ -2,3 +2,5 @@ logs/*
 logs
 *.alert
 test.py
+venv
+venv/*
