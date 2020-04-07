@@ -5,14 +5,13 @@ import time
 import os
 import re
 import logging
-import requests
 import uuid
 from thehive4py.api import TheHiveApi
 from thehive4py.models import Alert, AlertArtifact
 #!test!
 sys.argv.append('msg.alert')
-sys.argv.append('')
-sys.argv.append('oof')
+sys.argv.append('bar')
+sys.argv.append('bar')
 sys.argv.append('bar')
 #!test!
 
@@ -50,16 +49,21 @@ def main(args):
     logger.debug('#get TheHive url')
     thive = args[2]
     logger.debug('#get TheHive api key')
-    thive_api = args[3]
+    thive_api_key = args[3]
+    thive_api = TheHiveApi(thive, thive_api_key )
     logger.debug('#open alert file')
     w_alert = json.load(open(alert_file_location))
     logger.debug('#gen json to dot-key-text')
     alt = pr(w_alert,'',[])
-    format_alt = ''
-    for now in alt: format_alt+=now + '\n'
+    logger.debug('#formatting description')
+    format_alt = md_format(alt)
+    #for now in alt: format_alt+= '* '+now + '\n'
     logger.debug('#search artifacts')
     artifacts_dict = artifact_detect(format_alt)
     alert = generate_alert(format_alt, artifacts_dict, w_alert)
+    send_alert(alert, thive_api)
+    #print(alt)
+    #print(format_alt)
 
 
 def pr(data,prefix, alt):
@@ -67,8 +71,44 @@ def pr(data,prefix, alt):
         if hasattr(value,'keys'):
             pr(value,prefix+'.'+str(key),alt=alt)
         else:
-            alt.append((prefix+'.'+str(key)+': '+str(value)))
+            alt.append((prefix+'.'+str(key)+'|||'+str(value)))
     return alt
+
+
+#| Plugin | README |
+#| ------ | ------ |
+#| Dropbox | [plugins/dropbox/README.md][PlDb] |
+
+def md_format(alt,format_alt=''):
+    #format_alt='| key | val |\n| ------ | ------ |\n'
+    # for now in alt:
+    #     #del first dot
+    #     now = now[1:]
+    #     key,val = now.split('|||')[0],now.split('|||')[1]
+    #     format_alt+='| **' + key +'** | '+val+' |\n'
+    md_title_dict = {}
+    #sorted with first key
+    for now in alt:
+        now = now[1:]
+        #fix first key last symbol
+        dot = now.split('|||')[0].find('.')
+        if dot==-1:
+            md_title_dict[now.split('|||')[0]] =[now]
+        else:
+            if now[0:dot] in md_title_dict.keys():
+                (md_title_dict[now[0:dot]]).append(now)
+            else:
+                md_title_dict[now[0:dot]]=[now]
+    for now in md_title_dict.keys():
+        format_alt+='### '+now.capitalize()+'\n'+'| key | val |\n| ------ | ------ |\n'
+        for let in md_title_dict[now]:
+            key,val = let.split('|||')[0],let.split('|||')[1]
+            format_alt+='| **' + key + '** | ' + val + ' |\n'
+    print(format_alt)
+
+
+
+    return format_alt
 
 
 def artifact_detect(format_alt):
@@ -91,9 +131,13 @@ def generate_alert(format_alt, artifacts_dict,w_alert):
             artifacts.append(AlertArtifact(dataType=key, data=val))
     alert = Alert(title=w_alert['rule']['description'],
               tlp=2,
-              tags=['wazuh', 'rule='+w_alert['rule']['id'], 'agent_name='+w_alert['agent']['name'],'agent_id='+w_alert['agent']['id'],'agent_ip='+w_alert['agent']['ip'],],
-              description=format_alt,
-              type='external',
+              tags=['wazuh', 
+              'rule='+w_alert['rule']['id'], 
+              'agent_name='+w_alert['agent']['name'],
+              'agent_id='+w_alert['agent']['id'],
+              'agent_ip='+w_alert['agent']['ip'],],
+              description=format_alt ,
+              type='wazuh_alert',
               source='wazuh',
               sourceRef=sourceRef,
               artifacts=artifacts,)
@@ -102,8 +146,12 @@ def generate_alert(format_alt, artifacts_dict,w_alert):
 
 
 
-def send_msg(msg, url):
-    pass
+def send_alert(alert, thive_api):
+    response = thive_api.create_alert(alert)
+    if response.status_code == 201:
+        logger.info('Create TheHive alert: '+ str(response.json()['id']))
+    else:
+        logger.error('Error create TheHive alert: {}/{}'.format(response.status_code, response.text))
 
 
 
