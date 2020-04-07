@@ -3,14 +3,15 @@ import json
 import sys
 import time
 import os
+import re
 import logging
 import requests
 import uuid
 from thehive4py.api import TheHiveApi
-from thehive4py.models import Alert
+from thehive4py.models import Alert, AlertArtifact
 #!test!
 sys.argv.append('msg.alert')
-sys.argv.append('foo')
+sys.argv.append('')
 sys.argv.append('oof')
 sys.argv.append('bar')
 #!test!
@@ -44,13 +45,21 @@ logger.addHandler(fh)
 
 def main(args):
     logger.debug('#start main')
-    alert_file_location = args[1]
     logger.debug('#get alert file location')
-    thive = args[2]
+    alert_file_location = args[1]
     logger.debug('#get TheHive url')
-    w_alert = json.load(open(alert_file_location))
+    thive = args[2]
+    logger.debug('#get TheHive api key')
+    thive_api = args[3]
     logger.debug('#open alert file')
+    w_alert = json.load(open(alert_file_location))
+    logger.debug('#gen json to dot-key-text')
     alt = pr(w_alert,'',[])
+    format_alt = ''
+    for now in alt: format_alt+=now + '\n'
+    logger.debug('#search artifacts')
+    artifacts_dict = artifact_detect(format_alt)
+    alert = generate_alert(format_alt, artifacts_dict, w_alert)
 
 
 def pr(data,prefix, alt):
@@ -62,8 +71,35 @@ def pr(data,prefix, alt):
     return alt
 
 
-def generate_msg(alert):
-    pass
+def artifact_detect(format_alt):
+    artifacts_dict = {}
+    artifacts_dict['ip'] = re.findall(r'\d+\.\d+\.\d+\.\d+',format_alt)
+    artifacts_dict['url'] =  re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',format_alt)
+    artifacts_dict['domain'] = []
+    for now in artifacts_dict['url']: artifacts_dict['domain'].append(now.split('//')[1].split('/')[0])
+    return artifacts_dict
+
+
+def generate_alert(format_alt, artifacts_dict,w_alert):
+    #generate alert sourceRef
+    sourceRef = str(uuid.uuid4())[0:6]
+    artifacts = []
+    if not w_alert['agent']:
+        w_alert['agent'] = {'id':'no agent id', 'name':'no agent name', 'ip': 'no agent ip'}
+    for key,value in artifacts_dict.items():
+        for val in value:
+            artifacts.append(AlertArtifact(dataType=key, data=val))
+    alert = Alert(title=w_alert['rule']['description'],
+              tlp=2,
+              tags=['wazuh', 'rule='+w_alert['rule']['id'], 'agent_name='+w_alert['agent']['name'],'agent_id='+w_alert['agent']['id'],'agent_ip='+w_alert['agent']['ip'],],
+              description=format_alt,
+              type='external',
+              source='wazuh',
+              sourceRef=sourceRef,
+              artifacts=artifacts,)
+    return alert
+
+
 
 
 def send_msg(msg, url):
