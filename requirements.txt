@@ -1,9 +1,1 @@
-json
-sys
-time
-os
-logging
-logging
-requests
-uuid
-thehive4py
+thehive4py==1.6.0
