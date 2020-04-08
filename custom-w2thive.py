@@ -42,7 +42,7 @@ def main(args):
     logger.debug('#get TheHive url')
     thive = args[3]
     logger.debug('#get TheHive api key')
-    thive_api_key = args[1]
+    thive_api_key = args[2]
     thive_api = TheHiveApi(thive, thive_api_key )
     logger.debug('#open alert file')
     w_alert = json.load(open(alert_file_location))
@@ -55,8 +55,6 @@ def main(args):
     artifacts_dict = artifact_detect(format_alt)
     alert = generate_alert(format_alt, artifacts_dict, w_alert)
     send_alert(alert, thive_api)
-    #print(alt)
-    #print(format_alt)
 
 
 def pr(data,prefix, alt):
@@ -88,10 +86,6 @@ def md_format(alt,format_alt=''):
         for let in md_title_dict[now]:
             key,val = let.split('|||')[0],let.split('|||')[1]
             format_alt+='| **' + key + '** | ' + val + ' |\n'
-    print(format_alt)
-
-
-
     return format_alt
 
 
@@ -108,8 +102,12 @@ def generate_alert(format_alt, artifacts_dict,w_alert):
     #generate alert sourceRef
     sourceRef = str(uuid.uuid4())[0:6]
     artifacts = []
-    if not w_alert['agent']:
-        w_alert['agent'] = {'id':'no agent id', 'name':'no agent name', 'ip': 'no agent ip'}
+    if 'agent' in w_alert.keys():
+        if 'ip' not in w_alert['agent'].keys():
+            w_alert['agent']['ip']='no agent ip'
+    else:
+        w_alert['agent'] = {'id':'no agent id', 'name':'no agent name'}
+
     for key,value in artifacts_dict.items():
         for val in value:
             artifacts.append(AlertArtifact(dataType=key, data=val))
