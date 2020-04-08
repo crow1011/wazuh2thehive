@@ -8,19 +8,12 @@ import logging
 import uuid
 from thehive4py.api import TheHiveApi
 from thehive4py.models import Alert, AlertArtifact
-#!test!
-sys.argv.append('msg.alert')
-sys.argv.append('bar')
-sys.argv.append('bar')
-sys.argv.append('bar')
-#!test!
-
-
 
 # ossec.conf configuration:
 #  <integration>
-#    <name>w2thive</name>
+#    <name>custom-w2thive</name>
 #    <hook_url>http://localhost:9000</hook_url>
+#    <api_key>123456790</api_key>
 #    <alert_format>json</alert_format>
 #  </integration>
 
@@ -28,7 +21,7 @@ sys.argv.append('bar')
 debug_enabled = False
 pwd = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # Set paths
-log_file = '{0}/logs/integrations.log'.format(pwd+'/w2thive/')
+log_file = '{0}/logs/integrations.log'.format(pwd)
 logger = logging.getLogger(__name__)
 #set logging level
 logger.setLevel(logging.INFO)
@@ -47,9 +40,9 @@ def main(args):
     logger.debug('#get alert file location')
     alert_file_location = args[1]
     logger.debug('#get TheHive url')
-    thive = args[2]
+    thive = args[3]
     logger.debug('#get TheHive api key')
-    thive_api_key = args[3]
+    thive_api_key = args[1]
     thive_api = TheHiveApi(thive, thive_api_key )
     logger.debug('#open alert file')
     w_alert = json.load(open(alert_file_location))
@@ -75,17 +68,8 @@ def pr(data,prefix, alt):
     return alt
 
 
-#| Plugin | README |
-#| ------ | ------ |
-#| Dropbox | [plugins/dropbox/README.md][PlDb] |
 
 def md_format(alt,format_alt=''):
-    #format_alt='| key | val |\n| ------ | ------ |\n'
-    # for now in alt:
-    #     #del first dot
-    #     now = now[1:]
-    #     key,val = now.split('|||')[0],now.split('|||')[1]
-    #     format_alt+='| **' + key +'** | '+val+' |\n'
     md_title_dict = {}
     #sorted with first key
     for now in alt:
