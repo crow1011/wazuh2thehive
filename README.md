@@ -14,7 +14,6 @@ $ sudo chown root:ossec /var/ossec/integration/custom-w2thive.py
 $ sudo chown root:ossec /var/ossec/integration/custom-w2thive
 $ sudo nano /var/ossec/etc/ossec.conf
 ```
-вставьте в блок ossec_config следующий фрагмент:
 insert the following snippet into the ossec_config block:
 ```xml
 <integration>
