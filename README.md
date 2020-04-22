@@ -5,7 +5,7 @@ This project integrates SIEM Wazuh and TheHive. Use the following instructions t
 ```sh
 $ cd /opt/
 $ sudo git clone https://github.com/crow1011/wazuh2thehive.git
-$ sudo /var/ossec/bin/python/pip3 install -r /opt/wazuh2thehive/requirements.txt
+$ sudo /var/ossec/framework/python/bin/pip3 install -r /opt/wazuh2thehive/requirements.txt
 $ sudo cp /opt/wazuh2thehive/custom-w2thive.py /var/ossec/integration/custom-w2thive.py
 $ sudo cp /opt/wazuh2thehive/custom-w2thive /var/ossec/integration/custom-w2thive
 $ sudo chmod 755 /var/ossec/integration/custom-w2thive.py
