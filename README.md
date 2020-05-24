@@ -35,7 +35,7 @@ lines description:
 
 after configuration, apply the changes with this command:
 ```sh
-/var/ossec/bin/ossec_control restart
+/var/ossec/bin/ossec-control restart
 ```
 Finally, check the /var/ossec/log/integrations.log file for errors. If there is not enough information from the errors, you can enable debug_mode by changing the line in the file custom-w2thive.py 
 ```python
@@ -45,7 +45,14 @@ to
 ```python
 debug_enabled = True
 ```
+If you receive too many events, you can set a severity threshold for events that will be send to TheHive. Set the value of the lvl_threshold variable in the file /var/ossec/integrations/custom-w2thive.py
+```python
+lvl_threshold = 0
+```
+Events with a severity level equal to or greater will be sent to TheHive. You can read more about event classification in Wazuh here: [wazuh-rules-classification](https://documentation.wazuh.com/3.12/user-manual/ruleset/rules-classification.html)
+
 Vadim M.
+
 _ru_
 ## Wazuh and TheHive integration
 Этот проект интегрирует SIEM Wazuh и TheHive. Для настройки воспользуйтесь следующими инструкциями:
@@ -93,4 +100,9 @@ debug_enabled = False
 ```python
 debug_enabled = True
 ```
+Если вы получаете слишком много событий, вы можете задать порог критичности отправляемых в TheHive событий. Для того чтобы его установить этот порог, задайте значение переменной lvl_threshold в файле /var/ossec/integrations/custom-w2thive.py
+```python
+lvl_threshold = 0
+```
+В TheHive будут отправлены события с уровнем критичности равным или большим. Подробнее про классификацию событий в Wazuh можно прочитать здесь: [wazuh-rules-classification](https://documentation.wazuh.com/3.12/user-manual/ruleset/rules-classification.html)
 Vadim M.

@@ -17,14 +17,25 @@ from thehive4py.models import Alert, AlertArtifact
 #    <alert_format>json</alert_format>
 #  </integration>
 
+
+#start user config
+
 # Global vars
+lvl_threshold=0
 debug_enabled = False
-pwd = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+#info about created alert
+info_enabled = True
+
+#end user config
+
 # Set paths
+pwd = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 log_file = '{0}/logs/integrations.log'.format(pwd)
 logger = logging.getLogger(__name__)
 #set logging level
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
+if info_enabled:
+    logger.setLevel(logging.INFO)
 if debug_enabled:
     logger.setLevel(logging.DEBUG)
 # create the logging file handler
@@ -54,7 +65,8 @@ def main(args):
     logger.debug('#search artifacts')
     artifacts_dict = artifact_detect(format_alt)
     alert = generate_alert(format_alt, artifacts_dict, w_alert)
-    send_alert(alert, thive_api)
+    if int(w_alert['rule']['level'])>=lvl_threshold:
+        send_alert(alert, thive_api)
 
 
 def pr(data,prefix, alt):
@@ -140,11 +152,6 @@ def send_alert(alert, thive_api):
 if __name__ == "__main__":
     
     try:
-       # Read arguments
-       if len(sys.argv) >= 4:
-         logger.warning('too many arguments')
-       elif len(sys.argv)<3:
-         logger.error('not enough arguments')
        logger.debug('debug mode') # if debug enabled       
        # Main function
        main(sys.argv)
