@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import json
 import sys
-import time
 import os
 import re
 import logging
@@ -21,7 +20,12 @@ from thehive4py.models import Alert, AlertArtifact
 #start user config
 
 # Global vars
+
+#threshold for wazuh rules level
 lvl_threshold=0
+#threshold for suricata rules level
+suricata_lvl_threshold=3
+
 debug_enabled = False
 #info about created alert
 info_enabled = True
@@ -57,15 +61,20 @@ def main(args):
     thive_api = TheHiveApi(thive, thive_api_key )
     logger.debug('#open alert file')
     w_alert = json.load(open(alert_file_location))
+    logger.debug('#alert data')
+    logger.debug(str(w_alert))
     logger.debug('#gen json to dot-key-text')
     alt = pr(w_alert,'',[])
     logger.debug('#formatting description')
     format_alt = md_format(alt)
-    #for now in alt: format_alt+= '* '+now + '\n'
     logger.debug('#search artifacts')
     artifacts_dict = artifact_detect(format_alt)
     alert = generate_alert(format_alt, artifacts_dict, w_alert)
-    if int(w_alert['rule']['level'])>=lvl_threshold:
+    logger.debug('#threshold filtering')
+    if w_alert['rule']['groups']==['ids','suricata']:
+        if int(w_alert['data']['alert']['severity'])<=suricata_lvl_threshold:
+            send_alert(alert, thive_api)
+    elif int(w_alert['rule']['level'])>=lvl_threshold:
         send_alert(alert, thive_api)
 
 
