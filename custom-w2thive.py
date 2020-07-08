@@ -72,11 +72,14 @@ def main(args):
     alert = generate_alert(format_alt, artifacts_dict, w_alert)
     logger.debug('#threshold filtering')
     if w_alert['rule']['groups']==['ids','suricata']:
+        #checking the existence of the data.alert.severity field
         if 'data' in w_alert.keys():
             if 'alert' in w_alert['data']:
+                #checking the level of the source event
                 if int(w_alert['data']['alert']['severity'])<=suricata_lvl_threshold:
                     send_alert(alert, thive_api)
     elif int(w_alert['rule']['level'])>=lvl_threshold:
+        #if the event is different from suricata AND suricata-event-type: alert check lvl_threshold
         send_alert(alert, thive_api)
 
 
