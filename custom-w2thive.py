@@ -26,7 +26,7 @@ lvl_threshold=0
 #threshold for suricata rules level
 suricata_lvl_threshold=3
 
-debug_enabled = False
+debug_enabled = True
 #info about created alert
 info_enabled = True
 
@@ -54,6 +54,13 @@ def main(args):
     logger.debug('#start main')
     logger.debug('#get alert file location')
     alert_file_location = args[1]
+    # for refactor
+    tmp_file = open(alert_file_location, 'r').read()
+    logger.debug(tmp_file)
+    f = open('/tmp/alert_wazuh2thehive.alert', 'w')
+    f.write(tmp_file)
+    f.close()
+    # end refactor
     logger.debug('#get TheHive url')
     thive = args[3]
     logger.debug('#get TheHive api key')
