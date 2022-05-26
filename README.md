@@ -1,3 +1,5 @@
+[article by Awwal Ishiaku](https://wazuh.com/blog/using-wazuh-and-thehive-for-threat-protection-and-incident-response/)
+
 _en_
 ## Wazuh and TheHive integration
 This project integrates SIEM Wazuh and TheHive. Use the following instructions to configure:
