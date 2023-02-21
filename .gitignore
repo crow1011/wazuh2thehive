@@ -5,3 +5,4 @@ venv
 venv/*
 *.bak
 .log
+.idea
